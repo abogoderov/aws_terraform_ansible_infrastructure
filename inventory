@@ -1,4 +1,0 @@
-[servers]
-ip-172-31-4-120.eu-central-1.compute.internal ansible_host=172.31.4.120 ansible_ssh_private_key_file=~/.ssh/private_key.pem
-ip-172-31-11-255.eu-central-1.compute.internal ansible_host=172.31.11.255 ansible_ssh_private_key_file=~/.ssh/private_key.pem
-ip-172-31-13-164.eu-central-1.compute.internal ansible_host=172.31.13.164 ansible_ssh_private_key_file=~/.ssh/private_key.pem
