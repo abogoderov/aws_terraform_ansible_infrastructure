@@ -33,6 +33,5 @@ BalancerDNS = "terraform-elb-XXXXXXXXX.eu-central-1.elb.amazonaws.com".
 3. Если вам необходимо укзать реквизиты для входа в AWS, запустите скрипт "./cred.sh".
 4. Для создание инфраструктуры на ресурсах облачного провайдера AWS  и последующего деплоя приложения NGINX на вновь созданные инстансы, используются стандартные команды запуска terraform init" и "terraform apply" из директории в которую был склонирован текущий репозиторий.
 5. Дождитесь окончания работы скрипта и откройте в Интернет браузере Веб страницу, используя DNS имя балансировщика.
-  5.1 DNS имя можно посмотреть в выводе после исполнения terraform скрипта. Пример   "terraform output
-BalancerDNS = "terraform-elb-XXXXXXXXX.eu-central-1.elb.amazonaws.com".
+6.  DNS имя выводится в консоль, после окончания разворачивания инфраструктуры на ресурсах облачного провайдера AWS, посредством terraform output. Пример "terraform output BalancerDNS = "terraform-elb-XXXXXXXXX.eu-central-1.elb.amazonaws.com"
 
