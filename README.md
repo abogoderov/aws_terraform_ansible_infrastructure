@@ -2,7 +2,7 @@
 
 This code automaticly creates AWS infrastruture with Terraform that consists of: 
   1. Three Ubuntu 20.04 Web servers
-  2. Bastion host to provide secured ssh connection to Web servers (ssh connection to Web severs allowed only private IP of Bastion host).
+  2. Bastion host to provide secured ssh connection to Web servers (ssh connection to Web severs allowed only from private IP of Bastion host).
   3. Amazon Elastic Load Balancer instance, used as proxy for Web Servers
 After infrastructure was created, Terraform installs Ansible to Bastion host and it becomes Ansible master for Web servers.
 With Ansible Master we deliver cofigurations that installs ngnix and forms a static HTML page to the Web Servers. This page shows as current private IP of the Web Server instance, we use as a proof that Load balancer gives us content from different servers.
