@@ -45,8 +45,6 @@ resource "aws_instance" "bastion_host" { # Creating bastion host
 
 locals { # Local variable to determine bastion host private ip
  cidr_bastion       = "${aws_instance.bastion_host.private_ip}/32"
-# cidr_balancer      = "${aws_elb.ws_balancer.private_ip}/32"
-  # depends_on = [aws_instance.bastion_host]
 }
 
 resource "aws_security_group" "my_webserver" { # Security group for web server
@@ -141,10 +139,7 @@ resource "aws_elb" "ws_balancer" {
   }
 
   instances                   = aws_instance.ws_private_instance.*.id
-  #cross_zone_load_balancing   = true
-  #idle_timeout                = 400
-  #connection_draining         = true
-  #connection_draining_timeout = 400
+
 }
 #--------------------------------------------------------------------------
 
