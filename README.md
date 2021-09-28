@@ -3,7 +3,7 @@
 This code automaticly creates AWS infrastruture with Terraform that consists of: 
   1. Three Ubuntu 20.04 Web servers
   2. Bastion host to provide secured ssh connection to Web servers (ssh connection to Web severs allowed only private IP of Bastion host).
-  3. Amazon Elasitic Load Balancer instance, used as proxy for Web Servers
+  3. Amazon Elastic Load Balancer instance, used as proxy for Web Servers
 After infrastructure was created, Terraform installs Ansible to Bastion host and it becomes Ansible master for Web servers.
 With Ansible Master we deliver cofigurations that installs ngnix and forms a static HTML page to the Web Servers. This page shows as current private IP of the Web Server instance, we use as a proof that Load balancer gives us content from different servers.
 
@@ -22,7 +22,7 @@ BalancerDNS = "terraform-elb-XXXXXXXXX.eu-central-1.elb.amazonaws.com".
 Данный код автоматически создает AWS инфраструктуру с помощи Terraform. Инфраструктура состоит из:
   1. Три веб-сервера Ubuntu 20.04
   2. Бастион хост, через который осуществляется ssh подключение к Веб серверам (К Веб серверу невозможно подключиться по ssh с любого IP, кроме private ip Бастиона).
-  3. Amazon Elasitic Load Balancer - балансировщик нагрузки, проксирующий траффик из сети Интернет на Веб сервера.
+  3. Amazon Elastic Load Balancer - балансировщик нагрузки, проксирующий траффик из сети Интернет на Веб сервера.
 После создания инфраструктуры, Terraform устанавливает Ansible на Бастион хост и он становится Ansible Master для Веб серверов.
 При помощи Ansible Master доставляются конфигурации, которые устанавливают ngnix и формируют статическую HTML страницу, содержающую приватный IP адрес того Веб сервера, на котором она создана. Данная страница используется для иллюстрации того, что Load Balancer отдает контент с разных Веб серверов. 
 
