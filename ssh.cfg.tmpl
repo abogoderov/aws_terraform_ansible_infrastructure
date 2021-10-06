@@ -1,0 +1,8 @@
+%{ for index, ip in private-ip ~}
+Host ${private-ip[index]} 
+  ProxyJump ubuntu@${public-ip-bastion}
+  IdentityFile ${sshkey}
+
+%{ endfor ~}
+Host ${public-ip-bastion}
+  IdentityFile ${sshkey}

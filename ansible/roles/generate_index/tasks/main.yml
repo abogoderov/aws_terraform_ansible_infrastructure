@@ -1,4 +1,0 @@
----
-
-  - name: Run script generate index
-    script: ~/ansible/roles/generate_index/files/script.sh

@@ -4,7 +4,13 @@
   vars:
     - ansible_user : ubuntu
   roles:
-    - vm_update
+    - ping_hosts
+
+- hosts: servers
+  become: yes
+  vars:
+    - ansible_user : ubuntu
+  roles:
     - nginx_install
     - index_generate
     

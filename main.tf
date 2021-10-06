@@ -1,37 +1,28 @@
 provider "aws" {
-  region = "eu-central-1"
-
-}
-resource "tls_private_key" "bastion_host_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
+  region = var.region
 
 }
 
-resource "aws_key_pair" "generated_key" {
-  key_name   = "bastion_host_key"
-  public_key = tls_private_key.bastion_host_key.public_key_openssh
-
-}
-resource "local_file" "private_key" {
-  content  = tls_private_key.bastion_host_key.private_key_pem
-  filename = "private_key.pem"
+resource "aws_key_pair" "sshkey" {
+  key_name   = "mykey"
+  public_key = file(var.pub_key)
 }
 
 resource "aws_instance" "ws_private_instance" { # Creating 3 same private instances 
   count                  = 3
-  ami                    = "ami-05f7491af5eef733a"
-  instance_type          = "t3.micro"
-  key_name               = aws_key_pair.generated_key.key_name
+  ami                    = var.ami
+  instance_type          = var.instance_type
+  availability_zone      = data.aws_availability_zones.available.names[count.index] # Every Web server is in different AZ
+  key_name               = aws_key_pair.sshkey.key_name
   vpc_security_group_ids = [aws_security_group.my_webserver.id]
   tags = {
     Name = "Ngnix"
   }
 }
 resource "aws_instance" "bastion_host" { # Creating bastion host
-  ami                    = "ami-05f7491af5eef733a"
-  instance_type          = "t3.micro"
-  key_name               = aws_key_pair.generated_key.key_name
+  ami                    = var.ami
+  instance_type          = var.instance_type
+  key_name               = aws_key_pair.sshkey.key_name
   vpc_security_group_ids = [aws_security_group.my_bastion.id]
 
 
@@ -42,20 +33,14 @@ resource "aws_instance" "bastion_host" { # Creating bastion host
 
 }
 
-
-locals { # Local variable to determine bastion host private ip
- cidr_bastion       = "${aws_instance.bastion_host.private_ip}/32"
-}
-
 resource "aws_security_group" "my_webserver" { # Security group for web server
   name        = "WebServer Security Group"
   description = "My First SecurityGroup"
 
-    ingress {
+  ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    #cidr_blocks = ["${local.cidr_balancer}"]
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -63,7 +48,6 @@ resource "aws_security_group" "my_webserver" { # Security group for web server
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
-    #cidr_blocks = ["${local.cidr_balancer}"]
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -85,10 +69,8 @@ resource "aws_security_group" "my_webserver" { # Security group for web server
   tags = {
     Name = "WebServer SecurityGroup"
   }
-  
+
 }
-
-
 
 resource "aws_security_group" "my_bastion" { # Security group for web server
   name        = "Bastion Security Group"
@@ -114,13 +96,11 @@ resource "aws_security_group" "my_bastion" { # Security group for web server
   }
 }
 
-
-
 #--------------------------------------------------------------------------
 # This block creates classic load balancer
 resource "aws_elb" "ws_balancer" {
   name               = "terraform-elb"
-  availability_zones = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
+  availability_zones = data.aws_availability_zones.available.names
 
 
   listener {
@@ -138,87 +118,38 @@ resource "aws_elb" "ws_balancer" {
     interval            = 30
   }
 
-  instances                   = aws_instance.ws_private_instance.*.id
+  instances = aws_instance.ws_private_instance.*.id
 
 }
-#--------------------------------------------------------------------------
 
-output "BalancerDNS" {
-  value = aws_elb.ws_balancer.dns_name
-}
-output "public_ip_bastion" {
-  value = aws_instance.bastion_host.public_ip
-}
-resource "null_resource" "pre_provision" {
-  provisioner "file" {
-    source      = "./private_key.pem"
-    destination = "~/.ssh/private_key.pem"
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.bastion_host_key.private_key_pem
-      host        = aws_instance.bastion_host.public_ip
-    }
+
+resource "null_resource" "check" {
+
+  provisioner "local-exec" {
+    command = "ansible-playbook playbook_deploy.yml"
+    interpreter = ["/bin/bash", "-c"]
   }
-  depends_on = [local_file.AnsibleInventory]
+  depends_on = [
+    local_file.AnsibleInventory
+  ]
 }
 
-resource "null_resource" "provision" {
-  provisioner "remote-exec" {
-    inline = [
-      "mkdir ~/ansible",
-      "sudo apt update -y",
-      "sudo apt install -y software-properties-common",
-      "sudo add-apt-repository --yes --update ppa:ansible/ansible",
-      "sudo apt install -y ansible",
-      "sudo chmod 600 ~/.ssh/private_key.pem"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.bastion_host_key.private_key_pem
-      host        = aws_instance.bastion_host.public_ip
-    }
-  }
-  provisioner "file" {
-    source      = "./ansible/"
-    destination = "~/ansible"
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.bastion_host_key.private_key_pem
-      host        = aws_instance.bastion_host.public_ip
-    }
-  }
+# This code block provides instance info for Ansible inventory file
+# 
 
-  provisioner "file" {
-    source      = "./inventory"
-    destination = "~/ansible/inventory"
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.bastion_host_key.private_key_pem
-      host        = aws_instance.bastion_host.public_ip
+resource "local_file" "AnsibleInventory" {
+  content = templatefile("inventory.tmpl",
+    {
+      public-ip-bastion  = aws_instance.bastion_host.public_ip,
+      public-dns-bastion = aws_instance.bastion_host.public_dns,
+      sshkey             = var.prv_key,
+      private-dns        = aws_instance.ws_private_instance.*.private_dns,
+      private-ip         = aws_instance.ws_private_instance.*.private_ip,
+      private-id         = aws_instance.ws_private_instance.*.id
     }
-  }
-
-  depends_on = [null_resource.pre_provision]
-}
-
-resource "null_resource" "ansible_playbook"{
-  provisioner "remote-exec" {
-    inline = [
-      "cd ~/ansible",
-      "ansible-playbook playbook_deploy.yml"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.bastion_host_key.private_key_pem
-      host        = aws_instance.bastion_host.public_ip
-    }
-  }
-  depends_on =  [null_resource.provision]
+  )
+  filename        = "inventory"
+  file_permission = "0600"
 }

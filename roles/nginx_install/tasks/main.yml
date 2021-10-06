@@ -1,0 +1,10 @@
+---
+  - name: Update cache and install nginx
+    become: true
+    apt:
+      name: nginx
+      state: present
+      update_cache: yes
+      cache_valid_time: 86400 #One day
+    notify: 
+      - Enable service nginx
