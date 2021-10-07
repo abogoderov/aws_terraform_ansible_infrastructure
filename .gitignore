@@ -5,3 +5,4 @@
 .terraformrc
 .terraform.rc
 inventory
+old.*
