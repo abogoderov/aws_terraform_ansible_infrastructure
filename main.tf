@@ -150,7 +150,7 @@ resource "null_resource" "key_transfer_bastion" {
     }
   }
 
-  #chmod key 400 on bastion
+  
 
   provisioner "remote-exec" {
     inline = ["chmod 400 /home/ubuntu/.ssh/id_rsa"]
