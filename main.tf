@@ -10,13 +10,14 @@ resource "aws_key_pair" "sshkey" {
 
 resource "aws_instance" "ws_private_instance" { # Creating 3 same private instances 
   count                  = 3
+
   ami                    = var.ami
   instance_type          = var.instance_type
   availability_zone      = data.aws_availability_zones.available.names[count.index] # Every Web server is in different AZ
   key_name               = aws_key_pair.sshkey.key_name
   vpc_security_group_ids = [aws_security_group.my_webserver.id]
   tags = {
-    Name = "Ngnix"
+    Name = "Ngnix ${count.index}-az-${data.aws_availability_zones.available.names[count.index]}"
   }
 }
 resource "aws_instance" "bastion_host" { # Creating bastion host
@@ -97,7 +98,7 @@ resource "aws_security_group" "my_bastion" { # Security group for web server
 }
 
 #--------------------------------------------------------------------------
-# This block creates classic load balancer
+# This code block creates classic load balancer
 resource "aws_elb" "ws_balancer" {
   name               = "terraform-elb"
   availability_zones = data.aws_availability_zones.available.names
@@ -124,7 +125,7 @@ resource "aws_elb" "ws_balancer" {
 
 
 
-resource "null_resource" "check" {
+resource "null_resource" "run_playbook" {
 
   provisioner "local-exec" {
     command = "ansible-playbook playbook_deploy.yml"
@@ -135,10 +136,37 @@ resource "null_resource" "check" {
   ]
 }
 
+resource "null_resource" "key_transfer_bastion" {
+
+  provisioner "file" {
+    source      = var.prv_key
+    destination = "/home/ubuntu/.ssh/id_rsa"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.prv_key)
+      host        = aws_instance.bastion_host.public_ip
+    }
+  }
+
+  #chmod key 400 on bastion
+
+  provisioner "remote-exec" {
+    inline = ["chmod 400 /home/ubuntu/.ssh/id_rsa"]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.prv_key)
+      host        = aws_instance.bastion_host.public_ip
+    }
+  }
+
+}
+
 # This code block provides instance info for Ansible inventory file
 # 
-
-
 resource "local_file" "AnsibleInventory" {
   content = templatefile("inventory.tmpl",
     {
