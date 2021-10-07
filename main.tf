@@ -1,11 +1,12 @@
 provider "aws" {
   region = var.region
-
+  access_key = "${var.aws_access_key}"
+  secret_key = "${var.aws_secret_key}"
 }
 
 resource "aws_key_pair" "sshkey" {
   key_name   = "mykey"
-  public_key = file(var.pub_key)
+  public_key = file("${var.pub_key_path}")
 }
 
 resource "aws_instance" "ws_private_instance" { # Creating 3 same private instances 
@@ -139,13 +140,13 @@ resource "null_resource" "run_playbook" {
 resource "null_resource" "key_transfer_bastion" {
 
   provisioner "file" {
-    source      = var.prv_key
+    source      = "${var.priv_key_path}"
     destination = "/home/ubuntu/.ssh/id_rsa"
 
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file(var.prv_key)
+      private_key = file("${var.priv_key_path}")
       host        = aws_instance.bastion_host.public_ip
     }
   }
@@ -158,7 +159,7 @@ resource "null_resource" "key_transfer_bastion" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file(var.prv_key)
+      private_key = file("${var.priv_key_path}")
       host        = aws_instance.bastion_host.public_ip
     }
   }
@@ -172,7 +173,7 @@ resource "local_file" "AnsibleInventory" {
     {
       public-ip-bastion  = aws_instance.bastion_host.public_ip,
       public-dns-bastion = aws_instance.bastion_host.public_dns,
-      sshkey             = var.prv_key,
+      sshkey             = "${var.priv_key_path}",
       private-dns        = aws_instance.ws_private_instance.*.private_dns,
       private-ip         = aws_instance.ws_private_instance.*.private_ip,
       private-id         = aws_instance.ws_private_instance.*.id
