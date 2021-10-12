@@ -161,18 +161,27 @@ resource "aws_elb" "ws_balancer" {
 
 }
 
-# resource "null_resource" "run_playbook" {
+resource "null_resource" "run_playbook" {
 
-#   provisioner "local-exec" {
-#     command     = "ansible-playbook playbook_deploy.yml"
-#     interpreter = ["/bin/bash", "-c"]
-#   }
-#   depends_on = [
-#     local_file.AnsibleInventory
+  provisioner "local-exec" {
+    command     = "ansible-playbook playbook_deploy.yml"
+    interpreter = ["/bin/bash", "-c"]
+  }
+  depends_on = [
+    local_file.playbook_deploy
 
-#   ]
-# }
+  ]
+}
 
+resource "local_file" "playbook_deploy" {
+  content = templatefile("playbook_deploy.tmpl",{
+    username = "${var.username}"
+    }
+  )
+  filename = "playbook_deploy.yml"
+  file_permission = "0600"
+  depends_on = [local_file.AnsibleInventory]
+}
 
 # This code block provides instance info for Ansible inventory file
 # 

@@ -1,22 +1,23 @@
 ---
-  - name: Update cache and install nginx
-    become: true
-    apt:
+ - name: Update cache and install nginx
+   become: true
+   apt:
       name: nginx
       state: present
       update_cache: yes
       cache_valid_time: 86400 #One day
-    when: ansible_os_family != "RedHat"
-    notify: 
-      - Enable service nginx
+   when: ansible_os_family != "RedHat"
+   notify: 
+     - Enable service nginx
+ 
+ - name: Update cache and install nginx
+   become: true
+   yum:
+     name: nginx
+     state: present
+     update_cache: yes
+   when: ansible_os_family == "RedHat"
+   notify: 
+     - Enable service nginx
+  
 
-  - name: Update cache and install nginx
-    become: true
-    yum:
-      name: nginx
-      state: present
-      update_cache: yes
-      cache_valid_time: 86400 #One day
-    when: ansible_os_family == "RedHat"
-    notify: 
-      - Enable service nginx

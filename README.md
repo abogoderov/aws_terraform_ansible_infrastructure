@@ -1,37 +1,57 @@
-# AWS infrastructure deploy by Terraform and configured by Ansible
+Инфраструктура AWS развернутая при помощи Terraform и сконфигурирована Ansible
+Данный код автоматически создает AWS инфраструктуру с помощи Terraform и доставляет конфигурации для запуска Веб-сервера с помощью Ansible. Инфраструктура состоит из:
+    1. Три веб-сервера Ubuntu 20.04 
+    2. Бастион хост, через который осуществляется ssh подключение к Веб серверам (К Веб серверу невозможно подключиться по ssh с любого IP, кроме private ip Бастиона). 
+    3. Amazon Elastic Load Balancer - балансировщик нагрузки, проксирующий траффик из сети Интернет на Веб сервера распределяя нагрузку между серверами. 
+Как использовать данный код:
+Для возможности запуска и корректной работы данного кода необходимо установить:
+    • terraform v1.0.8 или выше. 
+    • ansible [core 2.11.5] или выше. 
+    • git (для клонирования репозитория) 
+Стабильная работа кода на более низких версиях не тестировалась.
+Склонируйте репозиторий любым удобным способом, например, используя команду:
+git clone https://github.com/abogoderov/aws_terraform_ansible_infrastructure.git
+Перед запуском скрипта вам необходимо отредактировать файл terraform.tfvars, добавив в него следующие значения:
+aws_access_key = "your_AK" # Ваш ключ доступа AWS
+aws_secret_key = "your_SK" # Ваш секретный ключ AWS
+pub_key_path = "path_public" # Путь до вашего публичного ssh ключа например "~/.ssh/id_rsa.pub"
+priv_key_path = "your key here" #  Путь до вашего приватного ssh ключа например "~/.ssh/id_rsa"
+Если у вас отсутствует пара ssh ключей, или вы хотите сгенерировать новую пару ключей, используейте команду:
+ssh-keygen -b 2048 -t rsa
+Находясь в директории, в которую был склонирован код, откройте консоль используйте команду:
+terraform init
+После отработки данной команды, используйте команду terraform apply -var-file terraform.tfvars После запуска данной команды будет иницирован процесс планирования запуска инфраструктуры. Если процесс планирования завершился корректно, в терминале вы увидите следующий вывод:
+Do you want to perform these actions?
+Terraform will perform the actions described above.
+Only 'yes' will be accepted to approve.
 
-This code automaticly creates AWS infrastruture with Terraform that consists of: 
-  1. Three Ubuntu 20.04 Web servers
-  2. Bastion host to provide secured ssh connection to Web servers (ssh connection to Web severs allowed only from private IP of Bastion host).
-  3. Amazon Elastic Load Balancer instance, used as proxy for Web Servers
-After infrastructure was created, Terraform installs Ansible to Bastion host and it becomes Ansible master for Web servers.
-With Ansible Master we deliver cofigurations that installs ngnix and forms a static HTML page to the Web Servers. This page shows as current private IP of the Web Server instance, we use as a proof that Load balancer gives us content from different servers.
-
-# How to use the code:
-
-1. Install terraform using guideline from iffical recource
-2. Clone this repository to the location in which you will execute terraform.
-3. If you need to add your AWS credentials, you can use "./cred.sh" and it will guide you to add it.
-4. Being in the location, in where you cloned the repository run "terraform init" and "terraform apply"
-5. Wait for script to finish its work and use Load Balancers DNS name in your Internert browser 
-  5.1 DNS will be showing in stdout output after finishing Terraform script. Example: "terraform output
-BalancerDNS = "terraform-elb-XXXXXXXXX.eu-central-1.elb.amazonaws.com".
-
-# Инфраструктура AWS развернутая при помощи Terraform и сконфигурирована Ansible
-
-Данный код автоматически создает AWS инфраструктуру с помощи Terraform. Инфраструктура состоит из:
-  1. Три веб-сервера Ubuntu 20.04
-  2. Бастион хост, через который осуществляется ssh подключение к Веб серверам (К Веб серверу невозможно подключиться по ssh с любого IP, кроме private ip Бастиона).
-  3. Amazon Elastic Load Balancer - балансировщик нагрузки, проксирующий траффик из сети Интернет на Веб сервера.
-После создания инфраструктуры, Terraform устанавливает Ansible на Бастион хост и он становится Ansible Master для Веб серверов.
-При помощи Ansible Master доставляются конфигурации, которые устанавливают ngnix и формируют статическую HTML страницу, содержающую приватный IP адрес того Веб сервера, на котором она создана. Данная страница используется для иллюстрации того, что Load Balancer отдает контент с разных Веб серверов. 
-
-# Как использовать данный код:
-
-1. Установите terraform используя официальное руководство разработчика.
-2. Склонируйте данный репозиторий в директорию из которой будет осуществляться запуск бинарного файла Terraform.
-3. Если вам необходимо укзать реквизиты для входа в AWS, запустите скрипт "./cred.sh".
-4. Для создание инфраструктуры на ресурсах облачного провайдера AWS  и последующего деплоя приложения NGINX на вновь созданные инстансы, используются стандартные команды запуска terraform init" и "terraform apply" из директории в которую был склонирован текущий репозиторий.
-5. Дождитесь окончания работы скрипта и откройте в Интернет браузере Веб страницу, используя DNS имя балансировщика.
-6.  DNS имя выводится в консоль, после окончания разворачивания инфраструктуры на ресурсах облачного провайдера AWS, посредством terraform output. Пример "terraform output BalancerDNS = "terraform-elb-XXXXXXXXX.eu-central-1.elb.amazonaws.com"
+Enter a value:
+Введите yes и нажмите клавишу Enter. Данный шаг может быть пропущен при запуске команды terraform apply c ключем -auto-approve. По окочанию работы, на выход консоли будут возвращены следующие значения:
+BalancerDNS = "terraform-elb-xxxxxxxx.eu-central-1.elb.amazonaws.com"
+WebServers_private_IPs = [
+"xxx.31.30.129",
+"xxx.31.44.149",
+"xxx.31.12.113",
+]
+WebServers_public_IPs = [
+"x.67.202.135",
+"x.127.245.76",
+"x.122.100.153",
+]
+public_ip_bastion = "x.xx2.116.18"
+Проверку работы Веб сервера можно осуществить, перейдя по DNS-имени из параметра BalancerDNS = вставив его в адресную строку браузера.
+По окончанию работы, для уничтожения инфраструктуры, находясь в директории, откуда был запущен Terraform скрипт используйте команду terraform destroy (аналогично команде terraform apply после планирования удаления необходимо ввести yes и нажать Enter или запускать terraform destroy использовав ключ -auto-approve)
+Вы так-же можете указывать дополнительные параметры запуска в виде переменных, совместно с параметром -var-file terraform.tfvars например:
+terraform apply -var-file terraform.tfvars -var region=eu-central-1 -var instance_type=t3.micro 
+или не используя его передавать параметры вручную:
+terraform apply -var aws_access_key=THISISFORTESTPURPOSE -var aws_secret_key=themostsecretkeyeverbeen -var region=ca-central-1
+Перечень параметров, которые можно передавать в -var
+aws_access_key    # Ключ доступа AWS
+aws_secret_key    # Секретный ключ AWS
+pub_key_path      # Путь до публичного ssh ключа на вашем компьютере
+priv_key_path     # Путь до секретного ssh ключа на вашем компьютере
+region            # Регион AWS, например eu-central-1
+instance_type     # Тип EC2 инстансов(применяется на все инстансы), например t3.micro
+ami               # AMI образа используемой ОС
+Важно: в данной версии, при изменении региона (значение по умолчанию - eu-central-1), вам необходимо выбрать ami, доступный в данном регионе самостоятельно, автоматический поиск ami будет реализован в следующих версиях. Так же, замена ami на ОС, отличную от Ubuntu приведет к ошибке работы скрипта т.к. для авторизации на серверах, используется дефолтный username: ubuntu.
 

@@ -3,6 +3,15 @@
   - name: Generate index.html
     ansible.builtin.template:
       src: ../templates/index.j2
+      dest: /usr/share/nginx/html/index.html
+    when: ansible_os_family == "RedHat"
+    notify:
+      - Relooad nginx
+
+  - name: Generate index.html
+    ansible.builtin.template:
+      src: ../templates/index.j2
       dest: /var/www/html/index.nginx-debian.html
+    when: ansible_os_family != "RedHat"
     notify:
       - Relooad nginx

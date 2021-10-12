@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    - ansible_user : ${username}
+  roles:
+    - ping_hosts
+
+- hosts: servers
+  become: yes
+  vars:
+    - ansible_user : ${username}
+  roles:
+    - nginx_install
+    - index_generate
