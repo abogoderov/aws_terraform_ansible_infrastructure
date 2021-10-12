@@ -10,7 +10,5 @@ output "public_ip_bastion" {
 output "WebServers_private_IPs" {
   value = aws_instance.ws_private_instance.*.private_ip
 }
-output "WebServers_public_IPs" {
-  value = aws_instance.ws_private_instance.*.public_ip
-}
+
 
