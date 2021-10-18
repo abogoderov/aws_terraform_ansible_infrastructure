@@ -1,6 +1,6 @@
 resource "aws_vpc" "project_vpc" {
-  cidr_block       = var.vpc_subnet
-  instance_tenancy = "default"
+  cidr_block           = var.vpc_subnet
+  instance_tenancy     = "default"
   enable_dns_hostnames = true
   #enable_dns_support = true
   tags = {
@@ -22,7 +22,7 @@ resource "aws_subnet" "pub_subnet" {
 }
 
 resource "aws_subnet" "prv_subnet" {
-  count                   = local.count_avz
+  count = local.count_avz
 
   vpc_id                  = aws_vpc.project_vpc.id
   cidr_block              = cidrsubnet(var.vpc_subnet, 8, local.count_avz + count.index)

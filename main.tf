@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 data "aws_availability_zones" "available" {
-  state =  "available"
+  state = "available"
 }
 
 resource "aws_key_pair" "sshkey" {
@@ -18,8 +18,7 @@ resource "aws_instance" "ws_private_instance" { # Creating 3 same private instan
 
   ami                         = var.ami
   instance_type               = var.instance_type
-  subnet_id = aws_subnet.prv_subnet[count.index % local.count_avz].id
-  #availability_zone           = data.aws_availability_zones.available.names[count.index % length(data.aws_availability_zones.available.names)] # Every Web server is in different AZ
+  subnet_id                   = aws_subnet.prv_subnet[count.index % local.count_avz].id
   key_name                    = aws_key_pair.sshkey.key_name
   vpc_security_group_ids      = [aws_security_group.my_webserver.id]
   associate_public_ip_address = false
@@ -33,7 +32,7 @@ resource "aws_instance" "bastion_host" { # Creating bastion host
   instance_type          = var.instance_type
   key_name               = aws_key_pair.sshkey.key_name
   vpc_security_group_ids = [aws_security_group.my_bastion.id]
-  subnet_id = aws_subnet.pub_subnet[0].id
+  subnet_id              = aws_subnet.pub_subnet[0].id
 
   tags = {
     Name = "Bastion_host"
@@ -45,7 +44,7 @@ resource "aws_instance" "bastion_host" { # Creating bastion host
 resource "aws_security_group" "my_webserver" { # Security group for web server
   name        = "WebServer Security Group"
   description = "My First SecurityGroup"
-  vpc_id = aws_vpc.project_vpc.id
+  vpc_id      = aws_vpc.project_vpc.id
 
   ingress {
     from_port   = 80
@@ -85,7 +84,7 @@ resource "aws_security_group" "my_webserver" { # Security group for web server
 resource "aws_security_group" "my_bastion" { # Security group for web server
   name        = "Bastion Security Group"
   description = "My First SecurityGroup"
-  vpc_id = aws_vpc.project_vpc.id
+  vpc_id      = aws_vpc.project_vpc.id
 
   ingress {
     from_port   = 22
@@ -110,7 +109,7 @@ resource "aws_security_group" "my_bastion" { # Security group for web server
 resource "aws_security_group" "elb_sg" {
   name        = "ELB security group"
   description = "sg to open 80 and 8080"
-  vpc_id = aws_vpc.project_vpc.id
+  vpc_id      = aws_vpc.project_vpc.id
 
   ingress {
     from_port   = 80
@@ -137,9 +136,8 @@ resource "aws_security_group" "elb_sg" {
 #--------------------------------------------------------------------------
 # This code block creates classic load balancer
 resource "aws_elb" "ws_balancer" {
-  name               = "terraform-elb"
-  #availability_zones = data.aws_availability_zones.available.names
-  subnets = aws_subnet.pub_subnet[*].id
+  name            = "terraform-elb"
+  subnets         = aws_subnet.pub_subnet[*].id
   security_groups = [aws_security_group.elb_sg.id]
 
   listener {
@@ -174,14 +172,16 @@ resource "null_resource" "run_playbook" {
 }
 
 resource "local_file" "playbook_deploy" {
-  content = templatefile("playbook_deploy.tmpl",{
+  content = templatefile("playbook_deploy.tmpl", {
     username = "${var.username}"
     }
   )
-  filename = "playbook_deploy.yml"
+  filename        = "playbook_deploy.yml"
   file_permission = "0600"
-  depends_on = [local_file.AnsibleInventory]
+  depends_on      = [local_file.AnsibleInventory]
 }
+
+
 
 # This code block provides instance info for Ansible inventory file
 # 
@@ -199,10 +199,10 @@ resource "local_file" "AnsibleInventory" {
   )
   filename        = "inventory"
   file_permission = "0600"
-  depends_on = [aws_instance.ws_private_instance, 
-                aws_instance.bastion_host, 
-                aws_elb.ws_balancer,
-                aws_nat_gateway.natgw_prv,
-                aws_route_table.rt_prv,
-                aws_route_table.rt_pub]
+  depends_on = [aws_instance.ws_private_instance,
+    aws_instance.bastion_host,
+    aws_elb.ws_balancer,
+    aws_nat_gateway.natgw_prv,
+    aws_route_table.rt_prv,
+  aws_route_table.rt_pub]
 }

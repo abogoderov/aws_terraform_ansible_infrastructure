@@ -1,23 +1,35 @@
 ---
- - name: Update cache and install nginx
+ - name: Update cache and install nginx Debian
    become: true
    apt:
       name: nginx
       state: present
       update_cache: yes
       cache_valid_time: 86400 #One day
-   when: ansible_os_family != "RedHat"
+   when: (ansible_os_family != "RedHat") and (ansible_distribution != "Amazon")
    notify: 
      - Enable service nginx
  
- - name: Update cache and install nginx
+ - name: Update cache and install nginx RHEL
    become: true
    yum:
      name: nginx
      state: present
      update_cache: yes
-   when: ansible_os_family == "RedHat"
+   when: (ansible_os_family == "RedHat") and (ansible_distribution != "Amazon")
    notify: 
      - Enable service nginx
   
+ - name: Update cache Amazon Linux
+   become: true
+   yum:
+     update_cache: yes
+   when: ansible_distribution == "Amazon"
 
+
+ - name: Update cache and install nginx Amazon Linux
+   become: true
+   command: amazon-linux-extras install nginx1 -y
+   when: ansible_distribution == "Amazon"
+   notify: 
+     - Enable service nginx

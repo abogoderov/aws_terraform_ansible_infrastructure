@@ -28,16 +28,16 @@ variable "srv_count" {
 
 variable "vpc_subnet" {
   description = "New VPC CIDR block"
-  default = "172.0.0.0/16"
+  default     = "172.0.0.0/16"
 }
 
 variable "username" {
   description = "Enter username for your instance"
-  default = "ubuntu"
+  default     = "ubuntu"
 }
 
 locals {
   cidr_bastion = "${aws_instance.bastion_host.private_ip}/32"
-  count_avz = length(data.aws_availability_zones.available.names)
-  names_avz = data.aws_availability_zones.available.names[*]
+  count_avz    = length(data.aws_availability_zones.available.names)
+  names_avz    = data.aws_availability_zones.available.names[*]
 }
