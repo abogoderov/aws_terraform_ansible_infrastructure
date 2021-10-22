@@ -109,5 +109,9 @@ srv_count         # Количество инстансов с веб серве
 
     Otherwise, check with the AMI provider.
 
-
+На момент релиза, протестирована совестимость скрипта cо следующими AMI из бесплатного тира AWS:
+    - Amazon Linux (latest)
+    - RHEL (latest)
+    - Ubuntu (latest)
+    - Debian (latest)
 
